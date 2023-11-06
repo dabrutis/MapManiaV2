@@ -2,6 +2,9 @@ var gmap;
 var currentMarker = null;
 var currentLocationIndex = 0;
 var favoritePlaces;
+var score = 0;
+
+alert("Welcome to David's Map Mania, click on the map to find my favorite places, and use the distance away from target to see which clicks get you closer. Find all 8 of my favorite places to win the game! (Double click on the score field to instantly win)");
 
 fetch('https://dabrutis.github.io/MapManiaAPI/FavoritePlaces.json')
   .then(response => {
@@ -49,7 +52,7 @@ function initMap() {
       const currentLatLng = new google.maps.LatLng(currentLocation.coordinates.lat, currentLocation.coordinates.lng);
       const distanceToCurrentLocation = haversineDistance(clickedLatLng, currentLatLng);
 
-      document.getElementById("distanceDisplay").innerHTML = "Distance to Target: " + distanceToCurrentLocation.toFixed(2) + "km";
+      document.getElementById("distanceDisplay").innerHTML = "Hint: You are " + distanceToCurrentLocation.toFixed(2) + " km away from target";
 
       // Define a threshold for what is considered close enough
       const threshold = 50;
@@ -57,10 +60,23 @@ function initMap() {
       // Check if the location is within the map bounds
       if (gmap.getBounds().contains(currentLatLng)) {
         if (distanceToCurrentLocation <= threshold) {
-          // You can perform actions for the close location here if needed
-          alert(`You found the location: ${currentLocation.content}`);
+          // You found the location: Increment the score
+          score++;
+          alert(`You found the location: ${currentLocation.content}. Move onto the next location!`);
 
-          // Move to the next location
+          document.getElementById("scoreDisplay").innerHTML = `Score: ${score}/8`;
+          
+          // Check if all locations have been found
+          if (score === favoritePlaces.length) {
+            alert("Congratulations! You've found all 8 locations. You win!");
+
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+            });
+          }
+
           currentLocationIndex++;
           if (currentLocationIndex < favoritePlaces.length) {
             const nextLocation = favoritePlaces[currentLocationIndex];
@@ -69,6 +85,23 @@ function initMap() {
         }
       }
     }
+  });
+
+  // Add a double-click event listener on the score field
+  const scoreDisplay = document.getElementById("scoreDisplay");
+
+  scoreDisplay.addEventListener("dblclick", () => {
+      const isCheating = window.confirm("Do you want to activate the cheat code and instantly win the game?");
+      if (isCheating) {
+        score = favoritePlaces.length;
+        document.getElementById("scoreDisplay").innerHTML = `Score: ${score}/8`;
+        alert("Cheat code activated! You've instantly won the game.");
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
   });
 }
 
